@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gdriver - {{.CurrentPath}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+    <style>
+        body {
+            background-color: #212529;
+            color: #ccc;
+        }
+
+        .fileTable > .row > div {
+            padding-bottom: 5px;
+        }
+
+        .fileTable .d-path {
+            overflow-wrap: break-word;
+        }
+
+        .fileTable .d-act {
+            text-align: center;
+        }
+
+        .fileTable .d-act-check {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<h1>{{.CurrentPath}}</h1>
+
+
+<div class="fileTable">
+    <div class="row">
+        <div class="d-act col-3 col-lg-1">Actions</div>
+        <div class="d-path col-6 col-lg-9">Path</div>
+        <div class="d-mtime col-3 col-lg-2">MTime</div>
+
+    {{if .IsNotRoot}}
+        <div class="w-100"></div>
+        <div class="d-act col-3 col-lg-1">--</div>
+        <div class="d-path col-6 col-lg-9"><a href="/files/{{.ParentPathID}}">/..</a></div>
+        <div class="d-mtime col-3 col-lg-2">--</div>
+    {{end}}
+    {{range .Files}}
+        <div class="w-100"></div>
+        <div class="d-act d-act-check col-3 col-lg-1">
+            <input type="hidden" name="{{.ID}}" value="0"/>
+            <i class="fa fa-square-o input-off"></i>
+            <i class="fa fa-check-square-o input-on"></i>
+            <span class="status" id="status-{{.ID}}" data-status="{{.Status}}">
+                <i class="sts-unknown fa fa-question-circle"></i>
+                <i class="sts-error fa fa-exclamation-circle" style="color:var(--red);"></i>
+                <i class="sts-pending fa fa-refresh" style="color:var(--yellow);"></i>
+                <i class="sts-inprogress fa fa-refresh fa-spin" style="color:var(--green);"></i>
+                <i class="sts-done fa fa-check-circle" style="color:var(--blue)"></i>
+            </span>
+        </div>
+        <div class="d-path col-6 col-lg-9">
+        {{if .IsDir}}
+            <a href="/files/{{.ID}}">{{.Name}}</a>
+        {{else}}
+            {{.Name}}
+        {{end}}
+        </div>
+        <div class="d-mtime col-3 col-lg-2">{{.ModTime.Format "Jan _2 3:04 PM MST"}}</div>
+    {{end}}
+
+    </div>
+</div>
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+<script type="application/javascript">
+
+    function updateCheckbox(div) {
+        div = jQuery(div);
+        if (div.find('input').val() === "1") {
+            div.find('.input-off').hide();
+            div.find('.input-on').show();
+        } else {
+            div.find('.input-off').show();
+            div.find('.input-on').hide();
+        }
+    }
+
+    function updateStatus(div) {
+        div = jQuery(div);
+        var status = div.find('.status').attr('data-status');
+        div.find('.status i').hide();
+        div.find('.sts-' + status).show();
+    }
+
+    jQuery('.d-act-check').click(function () {
+        var div = jQuery(this);
+        var input = div.find('input');
+
+        if (input.val() === "1") {
+            input.val("0");
+        } else {
+            input.val("1");
+        }
+
+        updateCheckbox(div)
+    });
+
+    jQuery('.d-act-check').each(function (i, div) {
+        updateCheckbox(div);
+        updateStatus(div);
+    });
+</script>
+</body>
+</html>
