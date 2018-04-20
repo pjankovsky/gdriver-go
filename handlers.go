@@ -24,7 +24,7 @@ func handleFileList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	relPath := vars["path"]
 	if len(relPath) > 0 {
-		bytes, err := base64.StdEncoding.DecodeString(relPath)
+		bytes, err := base64.RawURLEncoding.DecodeString(relPath)
 		if err != nil {
 			log.Print(err)
 			http.Error(w, err.Error(), 500)
@@ -52,7 +52,7 @@ func handleFileList(w http.ResponseWriter, r *http.Request) {
 		Files:        paths,
 		IsNotRoot:    fulPath != rootPath,
 		ParentPath:   parentPath,
-		ParentPathID: base64.StdEncoding.EncodeToString([]byte(parentPath)),
+		ParentPathID: base64.RawURLEncoding.EncodeToString([]byte(parentPath)),
 	}
 
 	tmpl, err := template.ParseFiles("html/files.html")
@@ -72,7 +72,22 @@ func handleQueueStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	log.Print(fileIDs)
+
+	statusList, err := getFileStatusList(fileIDs)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(statusList)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }
 
 func handleQueueUpdate(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +106,22 @@ func handleQueueUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = updateFileStatus(fileIDs, status)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	statusList, err := getFileStatusList(fileIDs)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(statusList)
 	if err != nil {
 		log.Print(err)
 		http.Error(w, err.Error(), 500)

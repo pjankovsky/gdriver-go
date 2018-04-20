@@ -58,6 +58,20 @@ func getFileStatus(fileID string) (Status, error) {
 	return status, nil
 }
 
+func getFileStatusList(fileIDs []string) (map[string]Status, error) {
+	statusList := make(map[string]Status)
+
+	for _, fileID := range fileIDs {
+		status, err := getFileStatus(fileID)
+		if err != nil {
+			return nil, err
+		}
+		statusList[fileID] = status
+	}
+
+	return statusList, nil
+}
+
 func updateFileStatus(fileIDs []string, status Status) error {
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
 	if err != nil {

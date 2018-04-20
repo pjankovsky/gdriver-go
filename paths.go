@@ -33,7 +33,7 @@ const (
 func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 	fulPath := path.Clean(dirPath + string(os.PathSeparator) + file.Name())
 	relPath := fulPath[len(settings.Root):]
-	fileID := base64.StdEncoding.EncodeToString([]byte(relPath))
+	fileID := base64.RawURLEncoding.EncodeToString([]byte(relPath))
 	status, err := getFileStatus(fileID)
 	if err != nil {
 		return nil, err

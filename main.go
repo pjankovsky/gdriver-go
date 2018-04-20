@@ -18,7 +18,7 @@ func main() {
 
 	// file queue handling
 	r.HandleFunc("/queue/status", handleQueueStatus).Methods("POST")
-	r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("PUT")
+	r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

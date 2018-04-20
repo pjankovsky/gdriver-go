@@ -16,6 +16,14 @@
             color: #ccc;
         }
 
+        .fileTable .action-row {
+            padding: 20px;
+        }
+
+        .fileTable .action-row .btn {
+            margin-right: 20px;
+        }
+
         .fileTable > .row > div {
             padding-bottom: 5px;
         }
@@ -28,17 +36,25 @@
             text-align: center;
         }
 
-        .fileTable .d-act-check {
+        .fileTable .action-check {
             font-size: 1.2em;
         }
     </style>
 </head>
 <body>
-
+<div class="progress" style="height: 2px;">
+    <div id="countdown" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0"
+         aria-valuemax="100"></div>
+</div>
 <h1>{{.CurrentPath}}</h1>
 
-
 <div class="fileTable">
+    <div class="action-row">
+        <button type="button" class="btn btn-dark action-unselect"><span class="checked-count">10</span> Selected
+        </button>
+        <button type="button" class="btn btn-primary action-mark-pending">Add to Queue</button>
+        <button type="button" class="btn btn-success action-mark-done">Mark as Done</button>
+    </div>
     <div class="row">
         <div class="d-act col-3 col-lg-1">Actions</div>
         <div class="d-path col-6 col-lg-9">Path</div>
@@ -52,11 +68,11 @@
     {{end}}
     {{range .Files}}
         <div class="w-100"></div>
-        <div class="d-act d-act-check col-3 col-lg-1">
-            <input type="hidden" name="{{.ID}}" value="0"/>
+        <div class="d-act action-check col-3 col-lg-1">
+            <input type="hidden" class="action-input" name="{{.ID}}" value="0"/>
             <i class="fa fa-square-o input-off"></i>
             <i class="fa fa-check-square-o input-on"></i>
-            <span class="status" id="status-{{.ID}}" data-status="{{.Status}}">
+            <span class="sts-list" id="{{.ID}}" data-status="{{.Status}}">
                 <i class="sts-unknown fa fa-question-circle"></i>
                 <i class="sts-error fa fa-exclamation-circle" style="color:var(--red);"></i>
                 <i class="sts-pending fa fa-refresh" style="color:var(--yellow);"></i>
@@ -78,8 +94,8 @@
 </div>
 
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
         integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
@@ -90,41 +106,153 @@
 
 <script type="application/javascript">
 
-    function updateCheckbox(div) {
-        div = jQuery(div);
-        if (div.find('input').val() === "1") {
-            div.find('.input-off').hide();
-            div.find('.input-on').show();
+    function updateCheckbox() {
+        var input = jQuery(this);
+        if (input.val() === "1") {
+            input.siblings('.input-off').hide();
+            input.siblings('.input-on').show();
         } else {
-            div.find('.input-off').show();
-            div.find('.input-on').hide();
+            input.siblings('.input-off').show();
+            input.siblings('.input-on').hide();
+        }
+        updateActionRow();
+    }
+
+    function updateStatus(span) {
+        span = jQuery(span);
+        var status = span.attr('data-status');
+        span.find('i').hide();
+        span.find('.sts-' + status).show();
+    }
+
+    function updateActionRow() {
+        var countChecked = 0;
+        jQuery('.action-input').each(function (i, input) {
+            if (jQuery(input).val() === "1") {
+                countChecked = countChecked + 1;
+            }
+        });
+
+        jQuery('.checked-count').html(countChecked);
+        // if (countChecked > 0) {
+        //     jQuery('.action-row').show();
+        // } else {
+        //     jQuery('.action-row').hide();
+        // }
+    }
+
+    function uncheckAll() {
+        jQuery('.action-input').val("0").change();
+    }
+
+    function markPending() {
+        mark('pending');
+    }
+
+    function markInProgress() {
+        mark('inprogress');
+    }
+
+    function markDone() {
+        mark('done');
+    }
+
+    function mark(status) {
+        var fileIDs = [];
+        jQuery('.action-input').each(function (i, input) {
+            input = jQuery(input);
+            if (input.val() === "1") {
+                fileIDs.push(input.attr('name'))
+            }
+        });
+
+        jQuery.post('/queue/update/' + status, JSON.stringify(fileIDs), function (data) {
+            // updateStatuses(data);
+            uncheckAll();
+        })
+    }
+
+    function updateStatuses(data) {
+        var span;
+        for (var key in data) {
+            span = jQuery('#' + key).attr('data-status', data[key])
+            updateStatus(span)
         }
     }
 
-    function updateStatus(div) {
-        div = jQuery(div);
-        var status = div.find('.status').attr('data-status');
-        div.find('.status i').hide();
-        div.find('.sts-' + status).show();
+    var wait = 10000;
+    var timeout;
+
+    function updatePendingInProgress() {
+        clearTimeout(timeout);
+        var fileIDs = [],
+                fileID, status;
+        jQuery('.action-input').each(function (i, input) {
+            fileID = jQuery(input).attr('name');
+            status = jQuery('#' + fileID).attr('data-status');
+            if (status === "pending" || status === "inprogress") {
+                fileIDs.push(fileID);
+            }
+        });
+
+        if (fileIDs.length > 0) {
+            console.log("Checking for " + fileIDs.length + " statuses...");
+            jQuery.post('/queue/status', JSON.stringify(fileIDs), function (data) {
+                updateStatuses(data);
+                startCountdown();
+            });
+        } else {
+            startCountdown();
+        }
     }
 
-    jQuery('.d-act-check').click(function () {
+    function startCountdown() {
+        var bar = jQuery('#countdown');
+        bar.css('width', '100%');
+        bar.prop('w', 100);
+
+        timeout = setTimeout(updateCountdown, wait / 10);
+        setTimeout(updatePendingInProgress, wait);
+    }
+
+    function updateCountdown() {
+        var bar = jQuery('#countdown');
+        var w = bar.prop('w');
+        if (w > 0) {
+            w = w - 10;
+        }
+        bar.css('width', w + '%');
+        bar.prop('w', w);
+        timeout = setTimeout(updateCountdown, wait / 10);
+    }
+
+    jQuery('.action-mark-pending').click(markPending);
+    jQuery('.action-mark-done').click(markDone);
+
+    jQuery('.action-unselect').click(uncheckAll);
+
+    jQuery('.action-input').change(updateCheckbox);
+    jQuery('.action-input').each(function (i, ele) {
+        updateCheckbox.bind(ele)();
+    });
+
+    jQuery('.action-check').click(function () {
         var div = jQuery(this);
-        var input = div.find('input');
+        var input = div.find('.action-input');
 
         if (input.val() === "1") {
             input.val("0");
         } else {
             input.val("1");
         }
-
-        updateCheckbox(div)
+        input.change();
     });
 
-    jQuery('.d-act-check').each(function (i, div) {
-        updateCheckbox(div);
-        updateStatus(div);
+    jQuery('.sts-list').each(function (i, span) {
+        updateStatus(span);
     });
+
+    updatePendingInProgress();
 </script>
 </body>
 </html>
