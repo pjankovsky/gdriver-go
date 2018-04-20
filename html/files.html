@@ -167,7 +167,7 @@
         });
 
         jQuery.post('/queue/update/' + status, JSON.stringify(fileIDs), function (data) {
-            // updateStatuses(data);
+            updateStatuses(data);
             uncheckAll();
         })
     }
