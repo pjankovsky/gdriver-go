@@ -175,7 +175,10 @@
     function updateStatuses(data) {
         var span;
         for (var key in data) {
-            span = jQuery('#' + key).attr('data-status', data[key])
+            if (!data.hasOwnProperty(key)) {
+                continue;
+            }
+            span = jQuery('#' + key).attr('data-status', data[key]);
             updateStatus(span)
         }
     }
