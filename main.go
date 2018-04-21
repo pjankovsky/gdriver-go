@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	getLocTime()
 	loadSettings()
+	getLocTime()
 	setupBolt()
 	getDrive() // checks tokens
 

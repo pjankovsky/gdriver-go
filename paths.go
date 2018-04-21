@@ -100,7 +100,7 @@ func getLocTime() *time.Location {
 	if locTime != nil {
 		return locTime
 	}
-	loc, err := time.LoadLocation("America/Los_Angeles")
+	loc, err := time.LoadLocation(settings.LocalTime)
 	if err != nil {
 		log.Fatalf("Unable to local time location: %v", err)
 	}

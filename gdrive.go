@@ -11,13 +11,21 @@ import (
 	"io/ioutil"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"time"
 )
 
-var driveSrv *drive.Service
+const DriveClientTimeout = 30 * time.Minute
+
+var driveClient *drive.Service
+var driveClientEndtime time.Time
 
 func getDrive() *drive.Service {
-	if driveSrv != nil {
-		return driveSrv
+	if driveClientEndtime.After(time.Now()) {
+		driveClient = nil
+	}
+
+	if driveClient != nil {
+		return driveClient
 	}
 	buffer, err := ioutil.ReadFile("etc/client_secret.json")
 	if err != nil {
@@ -29,12 +37,14 @@ func getDrive() *drive.Service {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 
-	driveSrv, err = drive.New(getClient(config))
+	driveClient, err = drive.New(getClient(config))
 	if err != nil {
 		log.Fatalf("Unable to retrieve drive client: %v", err)
 	}
 
-	return driveSrv
+	driveClientEndtime = time.Now().Add(time.Duration(DriveClientTimeout))
+
+	return driveClient
 }
 
 func getClient(config *oauth2.Config) *http.Client {

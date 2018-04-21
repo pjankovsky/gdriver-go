@@ -11,6 +11,7 @@ type Settings struct {
 	Root      string
 	DbPath    string
 	DriveRoot string
+	LocalTime string
 	AuthUser  string
 	AuthPass  string
 }
@@ -29,4 +30,12 @@ func loadSettings() {
 		log.Fatalf("Unable to load setting file: %v", err)
 	}
 	settings.Root = path.Clean(settings.Root)
+
+	log.Printf("Settings loaded:")
+	log.Printf(" -- Root:       %v", settings.Root)
+	log.Printf(" -- DbPath:     %v", settings.DbPath)
+	log.Printf(" -- DriveRoot:  %v", settings.DriveRoot)
+	log.Printf(" -- LocalTime:  %v", settings.LocalTime)
+	log.Printf(" -- AuthUser:   %v", settings.AuthUser)
+	log.Printf(" -- AuthPass:   %v", settings.AuthPass)
 }

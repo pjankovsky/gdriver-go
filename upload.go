@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"google.golang.org/api/drive/v3"
 	"os"
+	"log"
 )
 
 const (
@@ -41,6 +42,7 @@ func doUpload(in <-chan FileID) {
 
 		bytes, err := base64.RawURLEncoding.DecodeString(string(fileID))
 		if err != nil {
+			log.Printf("Error decoding fileID [[%s]]: %v", fileID, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
@@ -48,6 +50,7 @@ func doUpload(in <-chan FileID) {
 		relPath := string(bytes)
 		path, err := getPath(relPath)
 		if err != nil {
+			log.Printf("Error finding fileID [[%s]]: %v", fileID, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
@@ -56,6 +59,7 @@ func doUpload(in <-chan FileID) {
 
 		err = uploadFileOrFolder(path, settings.DriveRoot)
 		if err != nil {
+			log.Printf("Error uploading file [[%s]]: %v", path.Name, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
@@ -112,7 +116,11 @@ func uploadFile(path *Path, parentId string) error {
 		Parents: parentIds,
 	}
 
+	log.Printf("Uploading file: %s", path.Name)
+
 	_, err = getDrive().Files.Create(&file).Media(b).Do()
+
+	log.Printf("File done: %s", path.Name)
 
 	return err
 }
