@@ -3,31 +3,31 @@ package main
 import (
 	"github.com/coreos/bbolt"
 	"fmt"
+	"log"
 )
 
 const (
 	FileQueueBucketName = "FileQueue"
 )
 
-func setupBolt() error {
+func setupBolt() {
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
 	if err != nil {
-		return err
+		log.Fatalf("Unable to open db: %v", err)
 	}
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(FileQueueBucketName))
 		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
+			return fmt.Errorf("create bucket %s failed: %v", FileQueueBucketName, err)
 		}
 		return nil
 	})
 
 	if err != nil {
-		return err
+		log.Fatalf("Unable to setup default buckets: %v", err)
 	}
-	return nil
 }
 
 func claimFileForUpload() (FileID, error) {
