@@ -129,9 +129,9 @@ func handleQueueUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parsePathPost(r *http.Request) ([]string, error) {
+func parsePathPost(r *http.Request) ([]FileID, error) {
 	decoder := json.NewDecoder(r.Body)
-	var arr []string
+	var arr []FileID
 	err := decoder.Decode(&arr)
 	if err != nil {
 		return nil, err
@@ -144,10 +144,11 @@ func validateStatus(status Status) (Status, error) {
 	switch status {
 	case StatusUnknown,
 		StatusError,
+		StatusReady,
 		StatusPending,
 		StatusInProgress,
 		StatusDone:
 		return status, nil
 	}
-	return "", fmt.Errorf("Invalid argument: status")
+	return "", fmt.Errorf("invalid argument: status")
 }

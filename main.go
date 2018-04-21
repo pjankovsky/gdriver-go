@@ -4,21 +4,36 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/mux"
+	"sync"
 )
 
 func main() {
 	loadSettings()
 	setupBolt()
 
-	r := mux.NewRouter();
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// listing files - main display
-	r.HandleFunc("/", handleFileList).Methods("GET")
-	r.HandleFunc("/files/{path}", handleFileList).Methods("GET")
+	go func() {
+		defer wg.Done()
+		r := mux.NewRouter()
 
-	// file queue handling
-	r.HandleFunc("/queue/status", handleQueueStatus).Methods("POST")
-	r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("POST")
+		// listing files - main display
+		r.HandleFunc("/", handleFileList).Methods("GET")
+		r.HandleFunc("/files/{path}", handleFileList).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+		// file queue handling
+		r.HandleFunc("/queue/status", handleQueueStatus).Methods("POST")
+		r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("POST")
+
+		log.Print(http.ListenAndServe(":15445", r))
+	}()
+
+	go func() {
+		defer wg.Done()
+		waitAndUpload()
+	}()
+
+	wg.Wait()
+
 }

@@ -39,13 +39,20 @@
         .fileTable .action-check {
             font-size: 1.2em;
         }
+
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
     </style>
 </head>
 <body>
-<div class="progress" style="height: 2px;">
-    <div id="countdown" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0"
-         aria-valuemax="100"></div>
-</div>
+{{/*<div class="progress" style="height: 2px;">*/}}
+{{/*<div id="countdown" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0"*/}}
+{{/*aria-valuemax="100"></div>*/}}
+{{/*</div>*/}}
 <h1>{{.CurrentPath}}</h1>
 
 <div class="fileTable">
@@ -75,7 +82,8 @@
             <span class="sts-list" id="{{.ID}}" data-status="{{.Status}}">
                 <i class="sts-unknown fa fa-question-circle"></i>
                 <i class="sts-error fa fa-exclamation-circle" style="color:var(--red);"></i>
-                <i class="sts-pending fa fa-refresh" style="color:var(--yellow);"></i>
+                <i class="sts-ready fa fa-upload" style="color:var(--yellow);"></i>
+                <i class="sts-pending fa fa-refresh" style="color:var(--orange);"></i>
                 <i class="sts-inprogress fa fa-refresh fa-spin" style="color:var(--green);"></i>
                 <i class="sts-done fa fa-check-circle" style="color:var(--blue)"></i>
             </span>
@@ -145,6 +153,10 @@
         jQuery('.action-input').val("0").change();
     }
 
+    function markReady() {
+        mark('ready');
+    }
+
     function markPending() {
         mark('pending');
     }
@@ -183,8 +195,12 @@
         }
     }
 
-    var wait = 10000;
-    var timeout;
+    var waitDefault = 2000,
+            waitStep = 1.4,
+            waitMax = 30000,
+            wait = waitDefault,
+            timeout,
+            lastStatus = "";
 
     function updatePendingInProgress() {
         clearTimeout(timeout);
@@ -193,28 +209,41 @@
         jQuery('.action-input').each(function (i, input) {
             fileID = jQuery(input).attr('name');
             status = jQuery('#' + fileID).attr('data-status');
-            if (status === "pending" || status === "inprogress") {
+            if (status === "ready" || status === "pending" || status === "inprogress") {
                 fileIDs.push(fileID);
             }
         });
 
         if (fileIDs.length > 0) {
             console.log("Checking for " + fileIDs.length + " statuses...");
-            jQuery.post('/queue/status', JSON.stringify(fileIDs), function (data) {
+            jQuery.post('/queue/status', JSON.stringify(fileIDs), function (data, status, xhr) {
+
+                if (lastStatus === xhr.responseText) {
+                    wait = parseInt(wait * waitStep);
+                    if (wait > waitMax) {
+                        wait = waitMax;
+                    }
+                } else {
+                    wait = waitDefault;
+                }
+                lastStatus = xhr.responseText;
+
                 updateStatuses(data);
                 startCountdown();
             });
         } else {
+            wait = waitDefault;
             startCountdown();
         }
     }
 
     function startCountdown() {
-        var bar = jQuery('#countdown');
-        bar.css('width', '100%');
-        bar.prop('w', 100);
-
-        timeout = setTimeout(updateCountdown, wait / 10);
+        // var bar = jQuery('#countdown');
+        // bar.css('width', '100%');
+        // bar.prop('w', 100);
+        //
+        // timeout = setTimeout(updateCountdown, wait / 10);
+        // console.log(wait);
         setTimeout(updatePendingInProgress, wait);
     }
 
@@ -229,7 +258,7 @@
         timeout = setTimeout(updateCountdown, wait / 10);
     }
 
-    jQuery('.action-mark-pending').click(markPending);
+    jQuery('.action-mark-pending').click(markReady);
     jQuery('.action-mark-done').click(markDone);
 
     jQuery('.action-unselect').click(uncheckAll);

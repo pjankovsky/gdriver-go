@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+const (
+	FileQueueBucketName = "FileQueue"
+)
+
 func setupBolt() error {
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
 	if err != nil {
@@ -13,7 +17,7 @@ func setupBolt() error {
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("FileQueue"))
+		_, err := tx.CreateBucketIfNotExists([]byte(FileQueueBucketName))
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
@@ -26,7 +30,52 @@ func setupBolt() error {
 	return nil
 }
 
-func getFileStatus(fileID string) (Status, error) {
+func claimFileForUpload() (FileID, error) {
+	db, err := bolt.Open(settings.DbPath, 0600, nil)
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	var claimedFileID FileID
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(FileQueueBucketName))
+		c := b.Cursor()
+
+		// scan to find a pending file
+		var foundFileID FileID
+		for fileID, status := c.First(); fileID != nil; fileID, status = c.Next() {
+			status, err := validateStatus(Status(status))
+			if err != nil {
+				continue
+			}
+			if status == StatusReady {
+				foundFileID = FileID(fileID)
+				break
+			}
+		}
+
+		// none found, return a blank
+		if foundFileID == "" {
+			claimedFileID = FileID("")
+			return nil
+		}
+
+		// mark it as inprogress
+		err := b.Put([]byte(foundFileID), []byte(StatusPending))
+		if err != nil {
+			return err
+		}
+
+		claimedFileID = foundFileID
+		return nil
+	})
+
+	return claimedFileID, err
+}
+
+func getFileStatus(fileID FileID) (Status, error) {
 	var status Status
 
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
@@ -36,7 +85,7 @@ func getFileStatus(fileID string) (Status, error) {
 	defer db.Close()
 
 	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("FileQueue"))
+		b := tx.Bucket([]byte(FileQueueBucketName))
 		v := string(b.Get([]byte(fileID)))
 		if v == "" {
 			status = StatusUnknown
@@ -47,7 +96,7 @@ func getFileStatus(fileID string) (Status, error) {
 	})
 
 	if err != nil {
-		return StatusError, err;
+		return StatusError, err
 	}
 
 	status, err = validateStatus(status)
@@ -58,8 +107,8 @@ func getFileStatus(fileID string) (Status, error) {
 	return status, nil
 }
 
-func getFileStatusList(fileIDs []string) (map[string]Status, error) {
-	statusList := make(map[string]Status)
+func getFileStatusList(fileIDs []FileID) (map[FileID]Status, error) {
+	statusList := make(map[FileID]Status)
 
 	for _, fileID := range fileIDs {
 		status, err := getFileStatus(fileID)
@@ -72,7 +121,7 @@ func getFileStatusList(fileIDs []string) (map[string]Status, error) {
 	return statusList, nil
 }
 
-func updateFileStatus(fileIDs []string, status Status) error {
+func updateFileStatus(fileIDs []FileID, status Status) error {
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
 	if err != nil {
 		return err
@@ -80,7 +129,7 @@ func updateFileStatus(fileIDs []string, status Status) error {
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("FileQueue"))
+		b := tx.Bucket([]byte(FileQueueBucketName))
 
 		for _, fileID := range fileIDs {
 			err := b.Put([]byte(fileID), []byte(status))

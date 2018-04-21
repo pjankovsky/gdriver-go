@@ -11,8 +11,10 @@ import (
 	"log"
 )
 
+type FileID string
+
 type Path struct {
-	ID      string
+	ID      FileID
 	Path    string
 	Name    string
 	ModTime time.Time
@@ -25,6 +27,7 @@ type Status string
 const (
 	StatusUnknown    Status = "unknown"
 	StatusError      Status = "error"
+	StatusReady      Status = "ready"
 	StatusPending    Status = "pending"
 	StatusInProgress Status = "inprogress"
 	StatusDone       Status = "done"
@@ -33,7 +36,7 @@ const (
 func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 	fulPath := path.Clean(dirPath + string(os.PathSeparator) + file.Name())
 	relPath := fulPath[len(settings.Root):]
-	fileID := base64.RawURLEncoding.EncodeToString([]byte(relPath))
+	fileID := FileID(base64.RawURLEncoding.EncodeToString([]byte(relPath)))
 	status, err := getFileStatus(fileID)
 	if err != nil {
 		return nil, err
@@ -50,11 +53,23 @@ func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 	return p, nil
 }
 
+func getPath(relPath string) (*Path, error) {
+	rootPath := path.Clean(settings.Root)
+	fulPath := path.Clean(rootPath + string(os.PathSeparator) + relPath)
+
+	fileInfo, err := os.Stat(fulPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewPath(fileInfo, path.Dir(fulPath))
+}
+
 func listPaths(dirPath string) ([]*Path, error) {
 	dirPath = path.Clean(dirPath)
 	if strings.Contains(dirPath, settings.Root) == false {
 		log.Printf("Target Path: %s", dirPath)
-		return nil, errors.New("Path outside of defined root.")
+		return nil, errors.New("path outside of defined root")
 	}
 
 	fileInfoArr, err := ioutil.ReadDir(dirPath)
@@ -64,11 +79,11 @@ func listPaths(dirPath string) ([]*Path, error) {
 
 	var pathArr []*Path
 	for _, file := range fileInfoArr {
-		path, err := NewPath(file, dirPath)
+		pathSt, err := NewPath(file, dirPath)
 		if err != nil {
 			return nil, err
 		}
-		pathArr = append(pathArr, path)
+		pathArr = append(pathArr, pathSt)
 	}
 	return pathArr, nil
 }
