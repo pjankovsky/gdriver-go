@@ -8,8 +8,10 @@ import (
 )
 
 func main() {
+	getLocTime()
 	loadSettings()
 	setupBolt()
+	getDrive() // checks tokens
 
 	var wg sync.WaitGroup
 	wg.Add(2)

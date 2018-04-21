@@ -16,12 +16,25 @@
             color: #ccc;
         }
 
-        .fileTable .action-row {
-            padding: 20px;
+        h1 {
+            overflow: hidden;
         }
 
-        .fileTable .action-row .btn {
-            margin-right: 20px;
+        .action-row {
+            padding: 10px 0 10px 10px;
+        }
+
+        .action-row .btn {
+            margin-right: 10px;
+        }
+
+        .fileTable {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 115px;
+            overflow: scroll;
         }
 
         .fileTable > .row > div {
@@ -55,13 +68,13 @@
 {{/*</div>*/}}
 <h1>{{.CurrentPath}}</h1>
 
+<div class="action-row">
+    <button type="button" class="btn btn-dark action-unselect"><span class="checked-count">0</span></button>
+    <button type="button" class="btn btn-primary action-mark-pending">Add to Queue</button>
+    <button type="button" class="btn btn-success action-mark-done">Mark as Done</button>
+</div>
+
 <div class="fileTable">
-    <div class="action-row">
-        <button type="button" class="btn btn-dark action-unselect"><span class="checked-count">10</span> Selected
-        </button>
-        <button type="button" class="btn btn-primary action-mark-pending">Add to Queue</button>
-        <button type="button" class="btn btn-success action-mark-done">Mark as Done</button>
-    </div>
     <div class="row">
         <div class="d-act col-3 col-lg-1">Actions</div>
         <div class="d-path col-6 col-lg-9">Path</div>

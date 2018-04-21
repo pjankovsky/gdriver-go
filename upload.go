@@ -3,7 +3,8 @@ package main
 import (
 	"time"
 	"encoding/base64"
-	"log"
+	"google.golang.org/api/drive/v3"
+	"os"
 )
 
 const (
@@ -53,9 +54,65 @@ func doUpload(in <-chan FileID) {
 
 		updateFileStatus(fileIDarr, StatusInProgress)
 
-		log.Printf("file: %q", path.Name)
-		time.Sleep(20 * time.Second)
+		err = uploadFileOrFolder(path, settings.DriveRoot)
+		if err != nil {
+			updateFileStatus(fileIDarr, StatusError)
+			continue
+		}
 
 		updateFileStatus(fileIDarr, StatusDone)
 	}
+}
+
+func uploadFileOrFolder(path *Path, parentId string) error {
+
+	if path.IsDir != true {
+		return uploadFile(path, parentId)
+	}
+
+	parentIds := make([]string, 1)
+	parentIds[0] = parentId
+
+	// make the folder
+	file := drive.File{
+		Name:     path.Name,
+		Parents:  parentIds,
+		MimeType: "application/vnd.google-apps.folder",
+	}
+
+	r, err := getDrive().Files.Create(&file).Fields("id").Do()
+	if err != nil {
+		return err
+	}
+
+	subPaths, err := listPaths(path.Path)
+	if err != nil {
+		return err
+	}
+
+	for _, subPath := range subPaths {
+		uploadFileOrFolder(subPath, r.Id)
+	}
+
+	return nil
+}
+
+func uploadFile(path *Path, parentId string) error {
+
+	b, err := os.Open(path.Path)
+	if err != nil {
+		return err
+	}
+
+	parentIds := make([]string, 1)
+	parentIds[0] = parentId
+
+	file := drive.File{
+		Name:    path.Name,
+		Parents: parentIds,
+	}
+
+	_, err = getDrive().Files.Create(&file).Media(b).Do()
+
+	return err
 }

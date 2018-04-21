@@ -13,23 +13,28 @@ import (
 	"google.golang.org/api/drive/v3"
 )
 
+var driveSrv *drive.Service
+
 func getDrive() *drive.Service {
+	if driveSrv != nil {
+		return driveSrv
+	}
 	buffer, err := ioutil.ReadFile("etc/client_secret.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
 
-	config, err := google.ConfigFromJSON(buffer, drive.DriveFileScope)
+	config, err := google.ConfigFromJSON(buffer, drive.DriveScope)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 
-	srv, err := drive.New(getClient(config))
+	driveSrv, err = drive.New(getClient(config))
 	if err != nil {
 		log.Fatalf("Unable to retrieve drive client: %v", err)
 	}
 
-	return srv
+	return driveSrv
 }
 
 func getClient(config *oauth2.Config) *http.Client {

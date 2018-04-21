@@ -9,6 +9,7 @@ import (
 	"path"
 	"errors"
 	"log"
+	"sort"
 )
 
 type FileID string
@@ -46,7 +47,7 @@ func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 		ID:      fileID,
 		Path:    fulPath,
 		Name:    file.Name(),
-		ModTime: file.ModTime(),
+		ModTime: file.ModTime().In(getLocTime()),
 		IsDir:   file.IsDir(),
 		Status:  status,
 	}
@@ -85,5 +86,24 @@ func listPaths(dirPath string) ([]*Path, error) {
 		}
 		pathArr = append(pathArr, pathSt)
 	}
+
+	sort.Slice(pathArr, func(i, j int) bool {
+		return pathArr[i].ModTime.UnixNano() > pathArr[j].ModTime.UnixNano()
+	})
+
 	return pathArr, nil
+}
+
+var locTime *time.Location
+
+func getLocTime() *time.Location {
+	if locTime != nil {
+		return locTime
+	}
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		log.Fatalf("Unable to local time location: %v", err)
+	}
+	locTime = loc
+	return locTime
 }
