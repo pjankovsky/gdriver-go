@@ -11,6 +11,8 @@ type Settings struct {
 	Root      string
 	DbPath    string
 	DriveRoot string
+	AuthUser  string
+	AuthPass  string
 }
 
 var settings Settings

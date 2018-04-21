@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"path"
 	"os"
+	"crypto/subtle"
 )
 
 type FilePageData struct {
@@ -18,6 +19,45 @@ type FilePageData struct {
 	IsNotRoot    bool
 	ParentPath   string
 	ParentPathID string
+}
+
+func routers() *mux.Router {
+	r := mux.NewRouter()
+
+	// listing files - main display
+	r.HandleFunc("/", handleFileList).Methods("GET")
+	r.HandleFunc("/files/{path}", handleFileList).Methods("GET")
+
+	// file queue handling
+	r.HandleFunc("/queue/status", handleQueueStatus).Methods("POST")
+	r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("POST")
+
+	r.Use(authMiddleware)
+
+	return r
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authOk := basicAuth(w, r)
+		if authOk {
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func basicAuth(w http.ResponseWriter, r *http.Request) bool {
+	user, pass, ok := r.BasicAuth()
+
+	if !ok ||
+		subtle.ConstantTimeCompare([]byte(user), []byte(settings.AuthUser)) != 1 ||
+		subtle.ConstantTimeCompare([]byte(pass), []byte(settings.AuthPass)) != 1 {
+		w.Header().Set("WWW-Authenticate", `Basic realm="gdriver-go"`)
+		w.WriteHeader(401)
+		w.Write([]byte("Unauthorized.\n"))
+		return false
+	}
+	return true
 }
 
 func handleFileList(w http.ResponseWriter, r *http.Request) {

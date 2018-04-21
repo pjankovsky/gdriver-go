@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"github.com/gorilla/mux"
 	"sync"
 )
 
@@ -18,17 +17,8 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		r := mux.NewRouter()
-
-		// listing files - main display
-		r.HandleFunc("/", handleFileList).Methods("GET")
-		r.HandleFunc("/files/{path}", handleFileList).Methods("GET")
-
-		// file queue handling
-		r.HandleFunc("/queue/status", handleQueueStatus).Methods("POST")
-		r.HandleFunc("/queue/update/{status}", handleQueueUpdate).Methods("POST")
-
-		log.Print(http.ListenAndServe(":15445", r))
+		r := routers()
+		log.Fatal(http.ListenAndServe(":15445", r))
 	}()
 
 	go func() {
