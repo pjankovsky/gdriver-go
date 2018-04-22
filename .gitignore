@@ -64,4 +64,5 @@ fabric.properties
 
 #gdriver-go specific
 gdriver-go
+gdriver-go.*
 queue.db
