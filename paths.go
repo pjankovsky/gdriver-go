@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log"
 	"sort"
+	"fmt"
 )
 
 type FileID string
@@ -88,10 +89,24 @@ func listPaths(dirPath string) ([]*Path, error) {
 	}
 
 	sort.Slice(pathArr, func(i, j int) bool {
-		return pathArr[i].ModTime.UnixNano() > pathArr[j].ModTime.UnixNano()
+
+		iDate := makeSortKey(pathArr[i])
+		jDate := makeSortKey(pathArr[j])
+
+		if iDate == jDate {
+			// dates are equal, sort Name ASC
+			return pathArr[i].Name < pathArr[j].Name
+		}
+		// sort Date DESC
+		return iDate > jDate
 	})
 
 	return pathArr, nil
+}
+
+func makeSortKey(path *Path) string {
+	y, m, d := path.ModTime.Date()
+	return fmt.Sprintf("%s%s%s", y, m, d)
 }
 
 var locTime *time.Location
