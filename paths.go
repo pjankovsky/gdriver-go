@@ -10,7 +10,6 @@ import (
 	"errors"
 	"log"
 	"sort"
-	"fmt"
 )
 
 type FileID string
@@ -105,8 +104,7 @@ func listPaths(dirPath string) ([]*Path, error) {
 }
 
 func makeSortKey(path *Path) string {
-	y, m, d := path.ModTime.Date()
-	return fmt.Sprintf("%s%s%s", y, m, d)
+	return path.ModTime.Format("20060102")
 }
 
 var locTime *time.Location
