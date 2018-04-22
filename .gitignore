@@ -61,4 +61,7 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+
+#gdriver-go specific
+gdriver-go
 queue.db
