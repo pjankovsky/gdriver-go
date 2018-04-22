@@ -18,7 +18,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		r := routers()
-		log.Fatal(http.ListenAndServe(":15445", r))
+		log.Fatal(http.ListenAndServe(settings.Host+":"+settings.Port, r))
 	}()
 
 	go func() {

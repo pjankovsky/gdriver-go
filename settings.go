@@ -9,6 +9,8 @@ import (
 
 type Settings struct {
 	Root             string
+	Host             string
+	Port             string
 	DbPath           string
 	DriveRoot        string
 	LocalTime        string
@@ -34,6 +36,8 @@ func loadSettings() {
 
 	log.Printf("Settings loaded:")
 	log.Printf(" -- Root:              %v", settings.Root)
+	log.Printf(" -- Host:              %v", settings.Host)
+	log.Printf(" -- Port:              %v", settings.Port)
 	log.Printf(" -- DbPath:            %v", settings.DbPath)
 	log.Printf(" -- DriveRoot:         %v", settings.DriveRoot)
 	log.Printf(" -- LocalTime:         %v", settings.LocalTime)

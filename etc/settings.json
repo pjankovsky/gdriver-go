@@ -1,9 +1,11 @@
 {
   "Root": "uploadTest",
+  "Host": "0.0.0.0",
+  "Port": "8080",
   "DbPath": "queue.db",
-  "DriveRoot": "0B53JmD9BWza3V1dsU1JXYjNOcjA",
+  "DriveRoot": "root",
   "LocalTime": "America/Los_Angeles",
   "UploadMaxWorkers": 3,
-  "AuthUser": "pbjankov",
+  "AuthUser": "",
   "AuthPass": ""
 }

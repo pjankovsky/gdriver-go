@@ -47,6 +47,10 @@ func authMiddleware(next http.Handler) http.Handler {
 }
 
 func basicAuth(w http.ResponseWriter, r *http.Request) bool {
+	if settings.AuthUser == "" && settings.AuthPass == "" {
+		return true
+	}
+
 	user, pass, ok := r.BasicAuth()
 
 	if !ok ||
