@@ -9,15 +9,14 @@ import (
 )
 
 const (
-	UploadTimeout    = 500 * time.Microsecond
-	UploadMaxWorkers = 5
+	UploadTimeout = 500 * time.Microsecond
 )
 
 func waitAndUpload() {
 	channel := make(chan FileID)
 	defer close(channel)
 
-	for i := 0; i < UploadMaxWorkers; i++ {
+	for i := 0; i < settings.UploadMaxWorkers; i++ {
 		go doUpload(channel)
 	}
 

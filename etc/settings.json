@@ -3,6 +3,7 @@
   "DbPath": "queue.db",
   "DriveRoot": "0B53JmD9BWza3V1dsU1JXYjNOcjA",
   "LocalTime": "America/Los_Angeles",
+  "UploadMaxWorkers": 3,
   "AuthUser": "pbjankov",
   "AuthPass": ""
 }
