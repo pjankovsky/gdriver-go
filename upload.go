@@ -6,6 +6,7 @@ import (
 	"google.golang.org/api/drive/v3"
 	"os"
 	"log"
+	"fmt"
 )
 
 const (
@@ -56,9 +57,8 @@ func doUpload(in <-chan FileID) {
 
 		updateFileStatus(fileIDarr, StatusInProgress)
 
-		err = uploadFileOrFolder(path, settings.DriveRoot)
+		err = uploadFileOrFolder(path, settings.DriveRoot, "")
 		if err != nil {
-			log.Printf("[[%s]] ERROR: %v", path.Name, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
@@ -67,11 +67,17 @@ func doUpload(in <-chan FileID) {
 	}
 }
 
-func uploadFileOrFolder(path *Path, parentId string) error {
+func uploadFileOrFolder(path *Path, parentId string, parentLog string) error {
+
+	if parentLog == "" {
+		parentLog = "[["
+	}
 
 	if path.IsDir != true {
-		return uploadFile(path, parentId)
+		return uploadFile(path, parentId, parentLog)
 	}
+
+	parentLog = fmt.Sprintf("%s/%s", parentLog, path.Name)
 
 	parentIds := make([]string, 1)
 	parentIds[0] = parentId
@@ -94,13 +100,16 @@ func uploadFileOrFolder(path *Path, parentId string) error {
 	}
 
 	for _, subPath := range subPaths {
-		uploadFileOrFolder(subPath, r.Id)
+		err = uploadFileOrFolder(subPath, r.Id, parentLog)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func uploadFile(path *Path, parentId string) error {
+func uploadFile(path *Path, parentId string, parentLog string) error {
 
 	b, err := os.Open(path.Path)
 	if err != nil {
@@ -115,13 +124,14 @@ func uploadFile(path *Path, parentId string) error {
 		Parents: parentIds,
 	}
 
-	log.Printf("[[%s]] START", path.Name)
+	log.Printf("%s/%s]] START", parentLog, path.Name)
 
 	_, err = getDrive().Files.Create(&file).Media(b).Do()
 
-	if err == nil {
-		log.Printf("[[%s]] DONE", path.Name)
+	if err != nil {
+		log.Printf("%s/%s]] ERROR: %v", parentLog, path.Name, err)
 	}
+	log.Printf("%s/%s]] DONE", parentLog, path.Name)
 
 	return err
 }
