@@ -62,16 +62,19 @@
     </style>
 </head>
 <body>
-{{/*<div class="progress" style="height: 2px;">*/}}
-{{/*<div id="countdown" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0"*/}}
-{{/*aria-valuemax="100"></div>*/}}
-{{/*</div>*/}}
+<!--
+<div class="progress" style="height: 2px;">
+<div id="countdown" class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0"
+aria-valuemax="100"></div>
+</div>
+-->
 <h1>{{.CurrentPath}}</h1>
 
 <div class="action-row">
     <button type="button" class="btn btn-dark action-unselect"><span class="checked-count">0</span></button>
-    <button type="button" class="btn btn-primary action-mark-pending">Add to Queue</button>
-    <button type="button" class="btn btn-success action-mark-done">Mark as Done</button>
+    <button type="button" class="btn btn-secondary action-mark-unknown">Unmark</button>
+    <button type="button" class="btn btn-primary action-mark-pending">Queue</button>
+    <button type="button" class="btn btn-success action-mark-done">Done</button>
 </div>
 
 <div class="fileTable">
@@ -108,7 +111,7 @@
             {{.Name}}
         {{end}}
         </div>
-        <div class="d-mtime col-3 col-lg-2">{{.ModTime.Format "Jan _2 3:04 PM MST"}}</div>
+        <div class="d-mtime col-3 col-lg-2">{{.ModTime.Format "Jan _2 3:04 PM"}}</div>
     {{end}}
 
     </div>
@@ -164,6 +167,10 @@
 
     function uncheckAll() {
         jQuery('.action-input').val("0").change();
+    }
+
+    function markUnknown() {
+        mark('unknown');
     }
 
     function markReady() {
@@ -271,6 +278,7 @@
         timeout = setTimeout(updateCountdown, wait / 10);
     }
 
+    jQuery('.action-mark-unknown').click(markUnknown);
     jQuery('.action-mark-pending').click(markReady);
     jQuery('.action-mark-done').click(markDone);
 
