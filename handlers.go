@@ -78,7 +78,7 @@ func handleFileList(w http.ResponseWriter, r *http.Request) {
 	} else {
 		relPath = "/"
 	}
-	rootPath := path.Clean(settings.Root)
+	rootPath := path.Clean(settings.LocalRoot)
 
 	fulPath := path.Clean(rootPath + string(os.PathSeparator) + relPath)
 
@@ -194,5 +194,5 @@ func validateStatus(status Status) (Status, error) {
 		StatusDone:
 		return status, nil
 	}
-	return "", fmt.Errorf("invalid argument: status")
+	return "", fmt.Errorf("invalid status: %v", status)
 }

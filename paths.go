@@ -36,7 +36,7 @@ const (
 
 func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 	fulPath := path.Clean(dirPath + string(os.PathSeparator) + file.Name())
-	relPath := fulPath[len(settings.Root):]
+	relPath := fulPath[len(settings.LocalRoot):]
 	fileID := FileID(base64.RawURLEncoding.EncodeToString([]byte(relPath)))
 	status, err := getFileStatus(fileID)
 	if err != nil {
@@ -55,7 +55,7 @@ func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 }
 
 func getPath(relPath string) (*Path, error) {
-	rootPath := path.Clean(settings.Root)
+	rootPath := path.Clean(settings.LocalRoot)
 	fulPath := path.Clean(rootPath + string(os.PathSeparator) + relPath)
 
 	fileInfo, err := os.Stat(fulPath)
@@ -68,7 +68,7 @@ func getPath(relPath string) (*Path, error) {
 
 func listPaths(dirPath string) ([]*Path, error) {
 	dirPath = path.Clean(dirPath)
-	if strings.Contains(dirPath, settings.Root) == false {
+	if strings.Contains(dirPath, settings.LocalRoot) == false {
 		log.Printf("Target Path: %s", dirPath)
 		return nil, errors.New("path outside of defined root")
 	}
