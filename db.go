@@ -4,6 +4,7 @@ import (
 	"github.com/coreos/bbolt"
 	"fmt"
 	"log"
+	"errors"
 )
 
 const (
@@ -58,8 +59,7 @@ func claimFileForUpload() (FileID, error) {
 
 		// none found, return a blank
 		if foundFileID == "" {
-			claimedFileID = FileID("")
-			return nil
+			return errors.New("no fileID found to claim")
 		}
 
 		// mark it as inprogress

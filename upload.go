@@ -10,39 +10,43 @@ import (
 )
 
 const (
-	UploadTimeout = 500 * time.Microsecond
+	UploadTimeout = 1 * time.Second
 )
 
 func waitAndUpload() {
-	channel := make(chan FileID)
-	defer close(channel)
+	files := make(chan FileID)
+	ticker := time.Tick(UploadTimeout)
+
+	defer close(files)
 
 	for i := 0; i < settings.UploadMaxWorkers; i++ {
-		go doUpload(channel)
+		go doUpload(i, files)
 	}
 
 	for {
+		<-ticker
 		fileID, err := claimFileForUpload()
 		if err == nil {
-			channel <- fileID
+			files <- fileID
 		}
-		time.Sleep(UploadTimeout)
 	}
 
 }
 
-func doUpload(in <-chan FileID) {
+func doUpload(id int, in <-chan FileID) {
 	for fileID := range in {
 		if fileID == "" {
 			continue
 		}
+
+		workerPrefix := fmt.Sprintf("[Worker %v] [[", id)
 
 		fileIDarr := make([]FileID, 1)
 		fileIDarr[0] = fileID
 
 		bytes, err := base64.RawURLEncoding.DecodeString(string(fileID))
 		if err != nil {
-			log.Printf("Error decoding fileID [[%s]]: %v", fileID, err)
+			log.Printf("%v%s]] Error decoding fileID: %v", workerPrefix, fileID, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
@@ -50,14 +54,14 @@ func doUpload(in <-chan FileID) {
 		relPath := string(bytes)
 		path, err := getPath(relPath)
 		if err != nil {
-			log.Printf("Error finding fileID [[%s]]: %v", fileID, err)
+			log.Printf("%v%s]]Error finding fileID: %v", workerPrefix, fileID, err)
 			updateFileStatus(fileIDarr, StatusError)
 			continue
 		}
 
 		updateFileStatus(fileIDarr, StatusInProgress)
 
-		err = uploadFileOrFolder(path, settings.DriveRoot, "")
+		err = uploadFileOrFolder(path, settings.DriveRoot, workerPrefix)
 		if err != nil {
 			updateFileStatus(fileIDarr, StatusError)
 			continue
