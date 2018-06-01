@@ -8,8 +8,10 @@ import (
 )
 
 type Settings struct {
-	Host             string
+	IP               string
 	Port             string
+	UseSsl           bool
+	SslHostname      string
 	AuthUser         string
 	AuthPass         string
 	LocalRoot        string
@@ -34,9 +36,13 @@ func loadSettings() {
 	}
 	settings.LocalRoot = path.Clean(settings.LocalRoot)
 
+	setupSsl()
+
 	log.Printf("Settings loaded:")
-	log.Printf(" -- Host:              %v", settings.Host)
+	log.Printf(" -- IP:                %v", settings.IP)
 	log.Printf(" -- Port:              %v", settings.Port)
+	log.Printf(" -- UseSsl:            %v", settings.UseSsl)
+	log.Printf(" -- SslHostname:       %v", settings.SslHostname)
 	log.Printf(" -- AuthUser:          %v", settings.AuthUser)
 	log.Printf(" -- AuthPass:          %v", settings.AuthPass)
 	log.Printf(" -- LocalRoot:         %v", settings.LocalRoot)

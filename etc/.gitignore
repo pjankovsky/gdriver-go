@@ -1,2 +1,4 @@
 client_secret.json
 token.json
+cert.pem
+key.pem

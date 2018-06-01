@@ -18,7 +18,11 @@ func main() {
 	go func() {
 		defer wg.Done()
 		r := routers()
-		log.Fatal(http.ListenAndServe(settings.Host+":"+settings.Port, r))
+		if settings.UseSsl == true {
+			log.Fatal(http.ListenAndServeTLS(settings.IP+":"+settings.Port, sslCert, sslKey, r))
+		} else {
+			log.Fatal(http.ListenAndServe(settings.IP+":"+settings.Port, r))
+		}
 	}()
 
 	go func() {
