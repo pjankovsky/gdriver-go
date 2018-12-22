@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"encoding/json"
-	"path"
 	"log"
+	"os"
+	"path"
 )
 
 type Settings struct {

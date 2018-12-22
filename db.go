@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/coreos/bbolt"
-	"fmt"
-	"log"
 	"errors"
+	"fmt"
+	bolt "github.com/etcd-io/bbolt"
+	"log"
 )
 
 const (
@@ -16,7 +16,7 @@ func setupBolt() {
 	if err != nil {
 		log.Fatalf("Unable to open db: %v", err)
 	}
-	defer db.Close()
+	defer closeBolt(db)
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(FileQueueBucketName))
@@ -31,12 +31,19 @@ func setupBolt() {
 	}
 }
 
+func closeBolt(db *bolt.DB) {
+	err := db.Close()
+	if err != nil {
+		log.Fatalf("Unable to close bolt: %v", err)
+	}
+}
+
 func claimFileForUpload() (FileID, error) {
 	db, err := bolt.Open(settings.DbPath, 0600, nil)
 	if err != nil {
 		return "", err
 	}
-	defer db.Close()
+	defer closeBolt(db)
 
 	var claimedFileID FileID
 
@@ -82,7 +89,7 @@ func getFileStatus(fileID FileID) (Status, error) {
 	if err != nil {
 		return StatusError, err
 	}
-	defer db.Close()
+	defer closeBolt(db)
 
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(FileQueueBucketName))
@@ -126,7 +133,7 @@ func updateFileStatus(fileIDs []FileID, status Status) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer closeBolt(db)
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(FileQueueBucketName))

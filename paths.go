@@ -1,15 +1,15 @@
 package main
 
 import (
-	"os"
-	"io/ioutil"
-	"time"
 	"encoding/base64"
-	"strings"
-	"path"
 	"errors"
+	"io/ioutil"
 	"log"
+	"os"
+	"path"
 	"sort"
+	"strings"
+	"time"
 )
 
 type FileID string

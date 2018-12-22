@@ -1,16 +1,16 @@
 package main
 
 import (
-	"net/http"
-	"log"
+	"crypto/subtle"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"encoding/json"
-	"encoding/base64"
 	"html/template"
-	"path"
+	"log"
+	"net/http"
 	"os"
-	"crypto/subtle"
+	"path"
 )
 
 type FilePageData struct {
