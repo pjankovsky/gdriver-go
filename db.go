@@ -9,6 +9,7 @@ import (
 
 const (
 	FileQueueBucketName = "FileQueue"
+	StateBucketName     = "State"
 )
 
 func setupBolt() {
@@ -19,10 +20,17 @@ func setupBolt() {
 	defer closeBolt(db)
 
 	err = db.Update(func(tx *bolt.Tx) error {
+
 		_, err := tx.CreateBucketIfNotExists([]byte(FileQueueBucketName))
 		if err != nil {
 			return fmt.Errorf("create bucket %s failed: %v", FileQueueBucketName, err)
 		}
+
+		_, err = tx.CreateBucketIfNotExists([]byte(StateBucketName))
+		if err != nil {
+			return fmt.Errorf("create bucket %s failed: %v", StateBucketName, err)
+		}
+
 		return nil
 	})
 
@@ -143,6 +151,45 @@ func updateFileStatus(fileIDs []FileID, status Status) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func getStateValue(key string) (string, error) {
+	var value = ""
+
+	db, err := bolt.Open(settings.DbPath, 0600, nil)
+	if err != nil {
+		return value, err
+	}
+	defer closeBolt(db)
+
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(StateBucketName))
+		value = string(b.Get([]byte(key)))
+		return nil
+	})
+
+	return value, err
+}
+
+func setStateValue(key string, value string) error {
+	db, err := bolt.Open(settings.DbPath, 0600, nil)
+	if err != nil {
+		return err
+	}
+	defer closeBolt(db)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(StateBucketName))
+
+		err := b.Put([]byte(key), []byte(value))
+		if err != nil {
+			return err
 		}
 
 		return nil
