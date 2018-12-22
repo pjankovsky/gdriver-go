@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"google.golang.org/api/drive/v3"
 	"log"
+	"math"
+	"math/rand"
 	"os"
 	"time"
 )
 
 const (
 	UploadTimeout = 1 * time.Second
+	BackoffMax    = 1 * time.Hour // max time to wait between retries
+	RetryMax      = 12            // max count of retries at BackoffMax
 )
 
 func waitAndUpload() {
@@ -130,12 +134,49 @@ func uploadFile(path *Path, parentId string, parentLog string) error {
 
 	log.Printf("%s/%s]] START", parentLog, path.Name)
 
-	_, err = getDrive().Files.Create(&file).Media(b).Do()
+	var success = false
+	var breakOut = false
+	var tries = 0
+	var maxTries = 0
+	var delay = 0 * time.Second
 
-	if err != nil {
-		log.Printf("%s/%s]] ERROR: %v", parentLog, path.Name, err)
+	for success == false && breakOut == false {
+		if delay > 0 {
+			log.Printf("%s/%s]] TOTAL TRIES: %v", parentLog, path.Name, tries)
+			log.Printf("%s/%s]] RETRY TIMEOUT: %s", parentLog, path.Name, delay)
+		}
+		time.Sleep(delay)
+
+		_, err = getDrive().Files.Create(&file).Media(b).Do()
+
+		if err != nil {
+			log.Printf("%s/%s]] ERROR: %v", parentLog, path.Name, err)
+
+			delay = calcBackoff(tries)
+			if delay == BackoffMax {
+				maxTries++
+				if maxTries > RetryMax {
+					breakOut = true
+					log.Printf("%s/%s]] MAX RETRIES REACHED", parentLog, path.Name)
+				}
+			}
+			tries++
+
+		} else {
+			success = true
+		}
 	}
-	log.Printf("%s/%s]] DONE", parentLog, path.Name)
 
+	log.Printf("%s/%s]] DONE", parentLog, path.Name)
 	return err
+}
+
+func calcBackoff(n int) time.Duration {
+	backoff := time.Duration(math.Pow(2, float64(n))) * time.Second
+	backoff += time.Duration(rand.Int31n(1000)) * time.Millisecond
+
+	if backoff > BackoffMax {
+		return BackoffMax
+	}
+	return backoff
 }
