@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    TARCMD="tar"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    command -v gdd >/dev/null 2>&1 || { echo >&2 "I require 'gtar' but it's not installed. Install with 'brew install gnu-tar'."; exit 1; }
+    TARCMD="gtar"
+else
+    TARCMD="tar"
+fi
+
 BUILD=`git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD`
 
-tar -czvf gdriver-go.${BUILD}.tar.gz --transform 's,^,gdriver-go/,' gdriver-go html etc/settings.json
+${TARCMD} -czvf gdriver-go.${BUILD}.tar.gz --transform 's,^,gdriver-go/,' gdriver-go html etc/settings.json
