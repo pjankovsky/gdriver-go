@@ -83,19 +83,63 @@ aria-valuemax="100"></div>
         <div class="d-path col-6 col-lg-9">Path</div>
         <div class="d-mtime col-3 col-lg-2">MTime</div>
 
-    {{if .IsNotRoot}}
-        <div class="w-100"></div>
-        <div class="d-act col-3 col-lg-1">--</div>
-        <div class="d-path col-6 col-lg-9"><a href="/files/{{.ParentPathID}}">/..</a></div>
-        <div class="d-mtime col-3 col-lg-2">--</div>
-    {{end}}
-    {{range .Files}}
-        <div class="w-100"></div>
-        <div class="d-act action-check col-3 col-lg-1">
-            <input type="hidden" class="action-input" name="{{.ID}}" value="0"/>
-            <i class="fa fa-square-o input-off"></i>
-            <i class="fa fa-check-square-o input-on"></i>
-            <span class="sts-list" id="{{.ID}}" data-status="{{.Status}}">
+        <div class="filter w-100"></div>
+        <div class="filter d-act col-3 col-lg-1">
+            <div class="dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
+                        id="filterActionsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false" data-current-filter="none">
+                    -No Filter-
+                </button>
+                <div class="dropdown-menu" aria-labelledby="filterActionsDropdownMenuButton">
+                    <a class="dropdown-item sts-f-none" href="#" data-value="none">-No Filter-</a>
+                    <a class="dropdown-item sts-f-unknown" href="#" data-value="unknown">
+                        <i class="fa fa-question-circle"></i>
+                        Unknown
+                    </a>
+                    <a class="dropdown-item sts-f-ready" href="#" data-value="ready">
+                        <i class="fa fa-upload" style="color:var(--yellow);"></i>
+                        Queued
+                    </a>
+                    <a class="dropdown-item sts-f-pending" href="#" data-value="pending">
+                        <i class="fa fa-refresh" style="color:var(--orange);"></i>
+                        Next Upload
+                    </a>
+                    <a class="dropdown-item sts-f-inprogress" href="#" data-value="inprogress">
+                        <i class="fa fa-refresh fa-spin" style="color:var(--green);"></i>
+                        Uploading
+                    </a>
+                    <a class="dropdown-item sts-f-done" href="#" data-value="done">
+                        <i class="fa fa-check-circle" style="color:var(--blue)"></i>
+                        Complete
+                    </a>
+                    <a class="dropdown-item sts-f-error" href="#" data-value="error">
+                        <i class="fa fa-exclamation-circle" style="color:var(--red);"></i>
+                        Error
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="filter d-path col-6 col-lg-9">
+            {{/*<input type="text" class="form-control form-control-sm" placeholder="Regex">*/}}
+        </div>
+        <div class="filter d-mtime col-3 col-lg-2">
+            {{/*<input type="text" class="form-control form-control-sm" placeholder="Regex">*/}}
+        </div>
+
+        {{if .IsNotRoot}}
+            <div class="w-100"></div>
+            <div class="d-act col-3 col-lg-1">--</div>
+            <div class="d-path col-6 col-lg-9"><a href="/files/{{.ParentPathID}}">/..</a></div>
+            <div class="d-mtime col-3 col-lg-2">--</div>
+        {{end}}
+        {{range .Files}}
+            <div class="w-100 file-row row-{{.ID}}"></div>
+            <div class="d-act action-check col-3 col-lg-1 file-row row-{{.ID}}">
+                <input type="hidden" class="action-input" name="{{.ID}}" value="0"/>
+                <i class="fa fa-square-o input-off"></i>
+                <i class="fa fa-check-square-o input-on"></i>
+                <span class="sts-list" id="{{.ID}}" data-status="{{.Status}}">
                 <i class="sts-unknown fa fa-question-circle"></i>
                 <i class="sts-error fa fa-exclamation-circle" style="display:none; color:var(--red);"></i>
                 <i class="sts-ready fa fa-upload" style="display:none; color:var(--yellow);"></i>
@@ -103,16 +147,16 @@ aria-valuemax="100"></div>
                 <i class="sts-inprogress fa fa-refresh fa-spin" style="display:none; color:var(--green);"></i>
                 <i class="sts-done fa fa-check-circle" style="display:none; color:var(--blue)"></i>
             </span>
-        </div>
-        <div class="d-path col-6 col-lg-9">
-        {{if .IsDir}}
-            <a href="/files/{{.ID}}">{{.Name}}</a>
-        {{else}}
-            {{.Name}}
+            </div>
+            <div class="d-path col-6 col-lg-9 file-row row-{{.ID}}">
+                {{if .IsDir}}
+                    <a href="/files/{{.ID}}">{{.Name}}</a>
+                {{else}}
+                    {{.Name}}
+                {{end}}
+            </div>
+            <div class="d-mtime col-3 col-lg-2 file-row row-{{.ID}}">{{.ModTime.Format "Jan _2 3:04 PM"}}</div>
         {{end}}
-        </div>
-        <div class="d-mtime col-3 col-lg-2">{{.ModTime.Format "Jan _2 3:04 PM"}}</div>
-    {{end}}
 
     </div>
 </div>
@@ -129,6 +173,28 @@ aria-valuemax="100"></div>
         crossorigin="anonymous"></script>
 
 <script type="application/javascript">
+
+    function updateStatusFilter(status) {
+        var selectedElement = jQuery('.filter.d-act .sts-f-' + status);
+        if (selectedElement.length === 0) {
+            selectedElement = jQuery('.filter.d-act .sts-f-none');
+            status = 'none';
+        }
+        jQuery('.filter.d-act .dropdown-toggle').html(selectedElement.html()).attr('data-current-filter', status);
+        applyStatusFilter();
+    }
+
+    function applyStatusFilter() {
+        var status = jQuery('.filter.d-act .dropdown-toggle').attr('data-current-filter');
+        if (status === 'none') {
+            jQuery('.file-row').show();
+        } else {
+            jQuery('.file-row').hide();
+            jQuery('.sts-list[data-status="' + status + '"]').each(function (index, obj) {
+                jQuery('.row-' + obj.id).show();
+            });
+        }
+    }
 
     function updateCheckbox() {
         var input = jQuery(this);
@@ -213,19 +279,20 @@ aria-valuemax="100"></div>
             span = jQuery('#' + key).attr('data-status', data[key]);
             updateStatus(span)
         }
+        applyStatusFilter();
     }
 
     var waitDefault = 2000,
-            waitStep = 1.4,
-            waitMax = 30000,
-            wait = waitDefault,
-            timeout,
-            lastStatus = "";
+        waitStep = 1.4,
+        waitMax = 30000,
+        wait = waitDefault,
+        timeout,
+        lastStatus = "";
 
     function updatePendingInProgress() {
         clearTimeout(timeout);
         var fileIDs = [],
-                fileID, status;
+            fileID, status;
         jQuery('.action-input').each(function (i, input) {
             fileID = jQuery(input).attr('name');
             status = jQuery('#' + fileID).attr('data-status');
@@ -303,6 +370,10 @@ aria-valuemax="100"></div>
 
     jQuery('.sts-list').each(function (i, span) {
         updateStatus(span);
+    });
+
+    jQuery('.filter.d-act .dropdown-item').click(function (event) {
+        updateStatusFilter(jQuery(event.currentTarget).attr('data-value'));
     });
 
     updatePendingInProgress();
