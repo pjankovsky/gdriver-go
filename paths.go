@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.cloudfoundry.org/bytefmt"
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
@@ -15,12 +16,14 @@ import (
 type FileID string
 
 type Path struct {
-	ID      FileID
-	Path    string
-	Name    string
-	ModTime time.Time
-	IsDir   bool
-	Status  Status
+	ID          FileID
+	Path        string
+	Name        string
+	ModTime     time.Time
+	Size        int64
+	DisplaySize string
+	IsDir       bool
+	Status      Status
 }
 
 type Status string
@@ -44,12 +47,14 @@ func NewPath(file os.FileInfo, dirPath string) (*Path, error) {
 	}
 
 	p := &Path{
-		ID:      fileID,
-		Path:    fulPath,
-		Name:    file.Name(),
-		ModTime: file.ModTime().In(getLocTime()),
-		IsDir:   file.IsDir(),
-		Status:  status,
+		ID:          fileID,
+		Path:        fulPath,
+		Name:        file.Name(),
+		ModTime:     file.ModTime().In(getLocTime()),
+		Size:        file.Size(),
+		DisplaySize: bytefmt.ByteSize(uint64(file.Size())),
+		IsDir:       file.IsDir(),
+		Status:      status,
 	}
 	return p, nil
 }

@@ -79,12 +79,13 @@ aria-valuemax="100"></div>
 
 <div class="fileTable">
     <div class="row">
-        <div class="d-act col-3 col-lg-1">Actions</div>
-        <div class="d-path col-6 col-lg-9">Path</div>
+        <div class="d-act col-2 col-lg-1">Actions</div>
+        <div class="d-path col-6 col-lg-8">Path</div>
+        <div class="d-size col-1 col-lg-1">Size</div>
         <div class="d-mtime col-3 col-lg-2">MTime</div>
 
         <div class="filter w-100"></div>
-        <div class="filter d-act col-3 col-lg-1">
+        <div class="filter d-act col-2 col-lg-1">
             <div class="dropdown">
                 <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
                         id="filterActionsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
@@ -120,22 +121,22 @@ aria-valuemax="100"></div>
                 </div>
             </div>
         </div>
-        <div class="filter d-path col-6 col-lg-9">
+        <div class="filter d-path col-6 col-lg-8">
             {{/*<input type="text" class="form-control form-control-sm" placeholder="Regex">*/}}
         </div>
-        <div class="filter d-mtime col-3 col-lg-2">
-            {{/*<input type="text" class="form-control form-control-sm" placeholder="Regex">*/}}
-        </div>
+        <div class="filter d-size col-1 col-lg-1"></div>
+        <div class="filter d-mtime col-3 col-lg-2"></div>
 
         {{if .IsNotRoot}}
             <div class="w-100"></div>
-            <div class="d-act col-3 col-lg-1">--</div>
-            <div class="d-path col-6 col-lg-9"><a href="/files/{{.ParentPathID}}">/..</a></div>
+            <div class="d-act col-2 col-lg-1">--</div>
+            <div class="d-path col-6 col-lg-8"><a href="/files/{{.ParentPathID}}">/..</a></div>
+            <div class="d-size col-1 col-lg-1">--</div>
             <div class="d-mtime col-3 col-lg-2">--</div>
         {{end}}
         {{range .Files}}
-            <div class="w-100 file-row row-{{.ID}}"></div>
-            <div class="d-act action-check col-3 col-lg-1 file-row row-{{.ID}}">
+            <div class="w-100 file-row" data-row-id="{{.ID}}"></div>
+            <div class="d-act col-2 col-lg-1 action-check file-row" data-row-id="{{.ID}}">
                 <input type="hidden" class="action-input" name="{{.ID}}" value="0"/>
                 <i class="fa fa-square-o input-off"></i>
                 <i class="fa fa-check-square-o input-on"></i>
@@ -148,14 +149,16 @@ aria-valuemax="100"></div>
                 <i class="sts-done fa fa-check-circle" style="display:none; color:var(--blue)"></i>
             </span>
             </div>
-            <div class="d-path col-6 col-lg-9 file-row row-{{.ID}}">
+            <div class="d-path col-6 col-lg-8 file-row" data-row-id="{{.ID}}">
                 {{if .IsDir}}
                     <a href="/files/{{.ID}}">{{.Name}}</a>
                 {{else}}
                     {{.Name}}
                 {{end}}
             </div>
-            <div class="d-mtime col-3 col-lg-2 file-row row-{{.ID}}">{{.ModTime.Format "Jan _2 3:04 PM"}}</div>
+            <div class="d-size col-1 col-lg-1 file-row" data-row-id="{{.ID}}">{{.DisplaySize}}</div>
+            <div class="d-mtime col-3 col-lg-2 file-row"
+                 data-row-id="{{.ID}}">{{.ModTime.Format "Jan _2 3:04 PM"}}</div>
         {{end}}
 
     </div>
@@ -191,7 +194,7 @@ aria-valuemax="100"></div>
         } else {
             jQuery('.file-row').hide();
             jQuery('.sts-list[data-status="' + status + '"]').each(function (index, obj) {
-                jQuery('.row-' + obj.id).show();
+                jQuery('.file-row[data-row-id="' + obj.id + '"]').show();
             });
         }
     }
