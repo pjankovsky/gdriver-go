@@ -3,7 +3,7 @@
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     TARCMD="tar"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    command -v gdd >/dev/null 2>&1 || { echo >&2 "I require 'gtar' but it's not installed. Install with 'brew install gnu-tar'."; exit 1; }
+    command -v gtar >/dev/null 2>&1 || { echo >&2 "I require 'gtar' but it's not installed. Install with 'brew install gnu-tar'."; exit 1; }
     TARCMD="gtar"
 else
     TARCMD="tar"
