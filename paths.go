@@ -112,16 +112,4 @@ func makeSortKey(path *Path) string {
 	return path.ModTime.Format("20060102")
 }
 
-var locTime *time.Location
 
-func getLocTime() *time.Location {
-	if locTime != nil {
-		return locTime
-	}
-	loc, err := time.LoadLocation(settings.LocalTime)
-	if err != nil {
-		log.Fatalf("Unable to local time location: %v", err)
-	}
-	locTime = loc
-	return locTime
-}

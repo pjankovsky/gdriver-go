@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 )
 
 type Settings struct {
@@ -19,6 +20,7 @@ type Settings struct {
 	DbPath           string
 	LocalTime        string
 	UploadMaxWorkers int
+	SQLitePath       string
 }
 
 var settings Settings
@@ -48,6 +50,21 @@ func loadSettings() {
 	log.Printf(" -- LocalRoot:         %v", settings.LocalRoot)
 	log.Printf(" -- DriveRoot:         %v", settings.DriveRoot)
 	log.Printf(" -- DbPath:            %v", settings.DbPath)
+	log.Printf(" -- SQLitePath:        %v", settings.SQLitePath)
 	log.Printf(" -- LocalTime:         %v", settings.LocalTime)
 	log.Printf(" -- UploadMaxWorkers:  %v", settings.UploadMaxWorkers)
+}
+
+var locTime *time.Location
+
+func getLocTime() *time.Location {
+	if locTime != nil {
+		return locTime
+	}
+	loc, err := time.LoadLocation(settings.LocalTime)
+	if err != nil {
+		log.Fatalf("Unable to local time location: %v", err)
+	}
+	locTime = loc
+	return locTime
 }

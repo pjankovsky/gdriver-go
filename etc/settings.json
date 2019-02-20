@@ -8,6 +8,7 @@
   "LocalRoot": "uploadTest",
   "DriveRoot": "root",
   "DbPath": "queue.db",
+  "SQLitePath": ":memory:",
   "LocalTime": "America/Los_Angeles",
   "UploadMaxWorkers": 3
 }
