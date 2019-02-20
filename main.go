@@ -1,12 +1,42 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"sync"
 )
 
 func main() {
+
+	flag.Parse()
+
+	switch mode := flag.Arg(0) ; mode {
+	case "daemonV1":
+		daemonV1()
+	case "migrateToV2":
+		migrateToV2()
+	case "scanGDrive":
+		scanGDrive()
+	default:
+		flag.PrintDefaults()
+	}
+
+}
+
+func scanGDrive() {
+	loadSettings()
+	getLocTime()
+	setupSQL()
+	getDrive()
+
+}
+
+func migrateToV2() {
+
+}
+
+func daemonV1() {
 	loadSettings()
 	getLocTime()
 	setupBolt()
@@ -31,5 +61,4 @@ func main() {
 	}()
 
 	wg.Wait()
-
 }
