@@ -2,8 +2,8 @@ package schema
 
 import "time"
 
-// GDriveFile is for db table gdrive_file
-type GDriveFile struct {
+// GDriveFileRow is for db table gDriveFile
+type GDriveFileRow struct {
 	id          GDriveFileID
 	parentID    GDriveFileID
 	fileType    FileType
@@ -14,8 +14,8 @@ type GDriveFile struct {
 	deleted     bool
 }
 
-// GDriveFileMetric is for db table gdrive_file_metric
-type GDriveFileMetric struct {
+// GDriveFileMetricRow is for db table gDriveFileMetric
+type GDriveFileMetricRow struct {
 	gDriveFileID GDriveFileID
 	foundAt      time.Time
 }

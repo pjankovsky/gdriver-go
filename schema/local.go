@@ -2,8 +2,8 @@ package schema
 
 import "time"
 
-// LocalFile is for db table local_file
-type LocalFile struct {
+// LocalFileRow is for db table localFile
+type LocalFileRow struct {
 	id           LocalFileID
 	parentID     LocalFileID
 	fileType     FileType
@@ -15,8 +15,8 @@ type LocalFile struct {
 	deleted      bool
 }
 
-// LocalFileMetric is for db table local_file_metric
-type LocalFileMetric struct {
+// LocalFileMetricRow is for db table localFileMetric
+type LocalFileMetricRow struct {
 	localFileID     LocalFileID
 	foundAt         time.Time
 	queuedAt        time.Time
